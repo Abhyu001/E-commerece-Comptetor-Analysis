@@ -8,3 +8,4 @@ statsmodels
 transformers
 tensorflow
 tf-keras
+BeautifulSoup
