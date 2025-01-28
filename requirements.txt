@@ -1,0 +1,8 @@
+pandas
+plotly
+requests
+streamlit
+openai
+scikit-learn
+statsmodels
+transformers
