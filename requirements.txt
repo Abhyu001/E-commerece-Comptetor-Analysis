@@ -6,3 +6,4 @@ openai
 scikit-learn
 statsmodels
 transformers
+pytorch
