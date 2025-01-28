@@ -6,4 +6,4 @@ openai
 scikit-learn
 statsmodels
 transformers
-pytorch
+tensorflow==2.0
