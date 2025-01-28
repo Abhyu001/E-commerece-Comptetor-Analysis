@@ -58,7 +58,7 @@ The **E-Commerce Competitor Strategy Dashboard** provides businesses with action
 
 ---
 
-### ![Product Analysis Example]([Streamlit2](https://github.com/user-attachments/assets/490a796e-8775-45fa-b0a7-a01959638a53)))
+### ![Product Analysis Example]([Streamlit2](competter analysis.jpg)))
 
 ---
 
@@ -72,7 +72,7 @@ The **E-Commerce Competitor Strategy Dashboard** provides businesses with action
 
 ---
 
-### ![Sentiment Analysis Example](![Streamlit3](https://github.com/user-attachments/assets/c8bd3bb4-3b27-4e6a-ac54-048d912d1d8d))
+### ![Sentiment Analysis Example](![Streamlit3](results.jpg))
 
 ---
 
