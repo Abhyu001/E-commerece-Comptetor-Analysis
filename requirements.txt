@@ -8,5 +8,5 @@ statsmodels
 transformers
 tensorflow
 tf-keras
-BeautifulSoup
+beautifulsoup4
 streamlit
