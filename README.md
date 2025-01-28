@@ -17,7 +17,7 @@ The **E-Commerce Competitor Strategy Dashboard** provides businesses with action
 
 ---
 
-### Dashboard[WhatsApp Image 2025-01-28 at 21 36 17_af8468f7](https://github.com/user-attachments/assets/58c373ff-66f8-43d2-b33a-463a48b65bc5)
+### Dashboard ![WhatsApp Image 2025-01-28 at 21 36 17_af8468f7](https://github.com/user-attachments/assets/58c373ff-66f8-43d2-b33a-463a48b65bc5)
 
 7926f-b697-4d7d-82a4-c394bcc2f6e7))
 
