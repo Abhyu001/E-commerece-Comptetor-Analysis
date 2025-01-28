@@ -9,3 +9,4 @@ transformers
 tensorflow
 tf-keras
 BeautifulSoup
+streamlit
