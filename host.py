@@ -153,16 +153,8 @@ else:
     st.write("No reviews available for this product.")
 
 # Forecasting Future Discounts
-product_data["Date"] = pd.to_datetime(product_data["Date"], errors="coerce")
-product_data = product_data.dropna(subset=["Date"])
-product_data.set_index("Date", inplace=True)
-product_data["Discount"] = pd.to_numeric(product_data["Discount"], errors="coerce")
-product_data = product_data.dropna(subset=["Discount"])
-
-product_data_with_predictions = forecast_discounts_arima(product_data)
-
 st.subheader("Competitor Current and Predicted Discounts")
-st.table(product_data_with_predictions.tail(10))
+st.dataframe(product_data_with_predictions.tail(10), width=800)  # Adjusting table width for better readability
 
 # Generate Recommendations
 recommendations = generate_strategy_recommendation(selected_product, product_data_with_predictions, sentiments if not product_reviews.empty else "No reviews available")
