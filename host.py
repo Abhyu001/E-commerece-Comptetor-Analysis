@@ -156,7 +156,7 @@ st.table(product_data_with_predictions.tail(10))
 
 # Generate strategic recommendations
 recommendations = generate_strategy_recommendation(
-    selected_product, product_data_with_predictions, sentiments if not product_reviews.empty else "No reviews available"")
+    selected_product, product_data_with_predictions, sentiments if not product_reviews.empty else "No reviews available")
 st.subheader("Strategic Recommendations")
 st.write(recommendations)
 
