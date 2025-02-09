@@ -1,4 +1,4 @@
-[11:05 pm, 9/2/2025] Abhyudai…: import pandas as pd
+import pandas as pd
 
 def split_amazon_csv(input_file="amazon_products.csv", review_file="amazon_reviews.csv", price_file="amazon_price.csv"):
     try:
