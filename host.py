@@ -1,3 +1,4 @@
+#importing libraries
 import json
 from datetime import datetime
 import pandas as pd
@@ -9,142 +10,191 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import train_test_split
 from statsmodels.tsa.arima.model import ARIMA
 from transformers import pipeline
-import numpy as np
 
-# Streamlit Page Configuration for Better UI Experience
-st.set_page_config(
-    page_title="E-Commerce Competitor Strategy Dashboard",
-    layout="wide"
-)
 
-# API Keys (Ensure these are stored securely)
-API_KEY = "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"  # Groq API Key
+#Follow the steps in README.md file to get the API keys and Azure OpenAI credentials
+API_KEY = "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" #Groq API Key
 SLACK_WEBHOOK = "https://hooks.slack.com/services/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"
 
-# Function to truncate long text for better display
+#It will minimze the length of text to specified length
 def truncate_text(text, max_length=512):
     return text[:max_length]
-
-# Load competitor data from CSV file
-@st.cache_data  # Caching to optimize performance
+#Loading the data from the csv file
 def load_competitor_data():
+    """Load competitor data from a CSV file."""
     data = pd.read_csv("amazon_products.csv")
+    print(data.head())
     return data
-
-# Load customer reviews data from CSV file
-@st.cache_data
+#loading the data from csv file
 def load_reviews_data():
+    """Load reviews data from a CSV file."""
     reviews = pd.read_csv("review_data.csv")
     return reviews
-
-# Perform sentiment analysis on reviews
-@st.cache_data
+#apply sentiment analysis pipeline using specific model
 def analyze_sentiment(reviews):
+    """Analyze customer sentiment for reviews."""
     sentiment_pipeline = pipeline(
-        "sentiment-analysis", 
-        model="distilbert/distilbert-base-uncased-finetuned-sst-2-english",
-        revision="714eb0f"
+    "sentiment-analysis", 
+    model="distilbert/distilbert-base-uncased-finetuned-sst-2-english",
+    revision="714eb0f"
     )
     return sentiment_pipeline([str(review) for review in reviews])
 
-# Train a predictive pricing model using RandomForest
-@st.cache_data
+#Train the model using Random Forest Regressor
 def train_predictive_model(data):
+    """Train a predictive model for competitor pricing strategy."""
     data["Discount"] = data["Discount"].str.replace("%", "").astype(float)
     data["MRP Price"] = data["MRP Price"].astype(int)
     data["Predicted_Discount"] = data["Discount"] + (data["MRP Price"] * 0.05).round(2)
 
     X = data[["MRP Price", "Discount"]]
     y = data["Predicted_Discount"]
-    
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    print(X)
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.2, random_state=42, train_size=0.8
+    )
+
     model = RandomForestRegressor(random_state=42)
     model.fit(X_train, y_train)
     return model
 
-# Function to forecast future discounts using ARIMA model
-@st.cache_data
+
+import numpy as np
+import pandas as pd
+
+#Fitting ARIMA model for forecasting it has 3 arguments ARIMA(p,d,q)  p models autoregressive part d ensures stationarity through differencing and q ensures moving average part
 def forecast_discounts_arima(data, future_days=5):
+    """
+    Forecast future discounts using ARIMA.
+    :param data: DataFrame containing historical discount data (with a datetime index).
+    :param future_days: Number of days to forecast.
+    :return: DataFrame with historical and forecasted discounts.
+    """
+
     data = data.sort_index()
+    print(product_data.index)
+
     data["Discount"] = pd.to_numeric(data["Discount"], errors="coerce")
     data = data.dropna(subset=["Discount"])
 
     discount_series = data["Discount"]
-    data.index = pd.to_datetime(data.index, errors="coerce")
-
+    if not isinstance(data.index, pd.DatetimeIndex):
+        try:
+            data.index = pd.to_datetime(data.index)
+        except Exception as e:
+            raise ValueError(
+                "Index must be datetime or convertible to datetime."
+            ) from e
+    #ARIMA(p,d,q)
     model = ARIMA(discount_series, order=(5, 1, 0))
     model_fit = model.fit()
+
     forecast = model_fit.forecast(steps=future_days)
-    
-    future_dates = pd.date_range(start=discount_series.index[-1] + pd.Timedelta(days=1), periods=future_days)
+    future_dates = pd.date_range(
+        start=discount_series.index[-1] + pd.Timedelta(days=1), periods=future_days
+    )
+
     forecast_df = pd.DataFrame({"Date": future_dates, "Predicted_Discount": forecast})
     forecast_df.set_index("Date", inplace=True)
+
     return forecast_df
 
-# Send recommendations to Slack
-@st.cache_data
+#webhook contains its message payload and its head
 def send_to_slack(data):
+    """ """
     payload = {"text": data}
-    requests.post(
+    response = requests.post(
         SLACK_WEBHOOK,
         data=json.dumps(payload),
         headers={"Content-Type": "application/json"},
     )
 
-# Generate business strategy recommendations using AI
-@st.cache_data
+#generating recommendations
 def generate_strategy_recommendation(product_name, competitor_data, sentiment):
+    """Generate strategic recommendations using an LLM."""
     date = datetime.now()
     prompt = f"""
-    You are a business strategist specializing in e-commerce. Based on the details below, suggest strategies:
-    
-    1. Product: {product_name}
-    2. Competitor Data:
-    {competitor_data}
-    3. Sentiment Analysis:
-    {sentiment}
-    4. Date: {str(date)}
-    
-    Provide structured recommendations:
-    1. Pricing Strategy
-    2. Promotional Campaign Ideas
-    3. Customer Satisfaction Improvements
+    You are a highly skilled business strategist specializing in e-commerce. Based on the following details, suggest actionable strategies to optimize pricing, promotions, and customer satisfaction for the selected product:
+
+1. Product Name: {product_name}
+
+2. Competitor Data (including current prices, discounts, and predicted discounts):
+{competitor_data}
+
+3. Sentiment Analysis:
+{sentiment}
+
+
+5. Today's Date: {str(date)}
+
+### Task:
+- Analyze the competitor data and identify key pricing trends.
+- Leverage sentiment analysis insights to highlight areas where customer satisfaction can be improved.
+- Use the discount predictions to suggest how pricing strategies can be optimized over the next 5 days.
+- Recommend promotional campaigns or marketing strategies that align with customer sentiments and competitive trends.
+- Ensure the strategies are actionable, realistic, and geared toward increasing customer satisfaction, driving sales, and outperforming competitors.
+
+Provide your recommendations in a structured format:
+1. Pricing Strategy
+2. Promotional Campaign Ideas
+3. Customer Satisfaction Recommendations
     """
 
-    data = {"messages": [{"role": "user", "content": prompt}], "model": "llama3-8b-8192", "temperature": 0}
-    headers = {"Content-Type": "application/json", "Authorization": f"Bearer {API_KEY}"}
-    res = requests.post("https://api.groq.com/openai/v1/chat/completions", data=json.dumps(data), headers=headers)
-    res = res.json()
-    return res["choices"][0]["message"]["content"]
+    messages = [{"role": "user", "content": prompt}]
 
-# Streamlit UI Setup
-st.title("📊 E-Commerce Competitor Strategy Dashboard")
+    data = {
+        "messages": [{"role": "user", "content": prompt}],
+        "model": "llama3-8b-8192",
+        "temperature": 0,
+    }
+
+    headers = {"Content-Type": "application/json", "Authorization": f"Bearer {API_KEY}"}
+
+    res = requests.post(
+        "https://api.groq.com/openai/v1/chat/completions",
+        data=json.dumps(data),
+        headers=headers,
+    )
+    res = res.json()
+    response = res["choices"][0]["message"]["content"]
+    return response
+
+
+####--------------------------------------------------##########
+#Streamlit app title 
+st.set_page_config(page_title="E-Commerce Competitor Strategy Dashboard", layout="wide")
+
+
+st.title("E-Commerce Competitor Strategy Dashboard")
 st.sidebar.header("Select a Product")
 
 products = [
-    "boAt Rockerz 480", "HP Victus Gaming Laptop", "HAVAI Thunder 85 Cooler", "Samsung Galaxy M05", "iQOO Z9x 5G"
+    "boAt Rockerz 480 w/RGB LEDs, 6 Light Modes, 40mm Drivers, Beast Mode, 60hrs Playback, ENx Tech, BT v5.3, Adaptive Fit & Easy Access Controls, Bluetooth Headphones(Black Sabre)",
+    "HP Victus, 13th Gen Intel Core i5-13420H, 6GB NVIDIA RTX 4050, 16GB DDR4, 512GB SSD (Win11, Office 21, Silver, 2.29kg) 144Hz, 9MS, IPS, 15.6-inch(39.6cm) FHD Gaming Laptop, Enhanced Cooling, fa1319TX",
+    "HAVAI Thunder 85 Desert Cooler - 75 Litres, 16 Inch Blade, Black",
+    "Samsung Galaxy M05 (Mint Green, 4GB RAM, 64 GB Storage) | 50MP Dual Camera | Bigger 6.7 HD+ Display | 5000mAh Battery | 25W Fast Charging | 2 Gen OS Upgrade & 4 Year Security Update | Without Charger",
+    "iQOO Z9x 5G (Tornado Green, 6GB RAM, 128GB Storage) | Snapdragon 6 Gen 1 with 560k+ AnTuTu Score | 6000mAh Battery with 7.99mm Slim Design | 44W FlashCharge"
 ]
 selected_product = st.sidebar.selectbox("Choose a product to analyze:", products)
 
-# Load data
+#calling functions part of Driver Code
 competitor_data = load_competitor_data()
 reviews_data = load_reviews_data()
 
-# Filter data for selected product
 product_data = competitor_data[competitor_data["Title"] == selected_product]
 product_reviews = reviews_data[reviews_data["Title"] == selected_product]
 
-# Display Competitor Data
 st.header(f"Competitor Analysis for {selected_product}")
 st.subheader("Competitor Data")
-st.dataframe(product_data.tail(5), width=800)  # Adjusting table width for better readability
+st.table(product_data.tail(5))
 
-# Sentiment Analysis
 if not product_reviews.empty:
-    product_reviews["Reviews"] = product_reviews["Reviews"].apply(lambda x: truncate_text(x, 512))
+    product_reviews["Reviews"] = product_reviews["Reviews"].apply(
+        lambda x: truncate_text(x, 512)
+    )
     reviews = product_reviews["Reviews"].tolist()
     sentiments = analyze_sentiment(reviews)
-    
+
     st.subheader("Customer Sentiment Analysis")
     sentiment_df = pd.DataFrame(sentiments)
     fig = px.bar(sentiment_df, x="label", title="Sentiment Analysis Results")
@@ -152,8 +202,28 @@ if not product_reviews.empty:
 else:
     st.write("No reviews available for this product.")
 
-# Generate Recommendations
-recommendations = generate_strategy_recommendation(selected_product, product_data, sentiments if not product_reviews.empty else "No reviews available")
+
+# Preprocessing
+product_data["Date"] = pd.to_datetime(product_data["Date"], errors="coerce")
+product_data = product_data.dropna(subset=["Date"])
+product_data.set_index("Date", inplace=True)
+product_data = product_data.sort_index()
+
+product_data["Discount"] = pd.to_numeric(product_data["Discount"], errors="coerce")
+product_data = product_data.dropna(subset=["Discount"])
+
+# Forecasting Model
+product_data_with_predictions = forecast_discounts_arima(product_data)
+
+
+st.subheader("Competitor Current and Predicted Discounts")
+st.table(product_data_with_predictions.tail(10))
+
+recommendations = generate_strategy_recommendation(
+    selected_product,
+    product_data_with_predictions,
+    sentiments if not product_reviews.empty else "No reviews available",
+)
 st.subheader("Strategic Recommendations")
 st.write(recommendations)
 send_to_slack(recommendations)
