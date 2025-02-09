@@ -15,8 +15,8 @@ import numpy as np
 st.set_page_config(page_title="E-Commerce Competitor Strategy Dashboard", layout="wide")
 
 # Constants: API keys and Webhook URL (Ensure these are securely stored)
-API_KEY = "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" #Groq API Key
-SLACK_WEBHOOK = "https://hooks.slack.com/services/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"
+API_KEY = "your_api_key_here"
+SLACK_WEBHOOK = "your_slack_webhook_url_here"
 
 # Function to truncate text to a specific length
 def truncate_text(text, max_length=512):
@@ -156,7 +156,7 @@ st.table(product_data_with_predictions.tail(10))
 
 # Generate strategic recommendations
 recommendations = generate_strategy_recommendation(
-    selected_product, product_data_with_predictions, sentiments if not product_reviews.empty else "No reviews available")
+    selected_product, product_data_with_predictions, sentiments if not product_reviews.empty else "No reviews available"")
 st.subheader("Strategic Recommendations")
 st.write(recommendations)
 
