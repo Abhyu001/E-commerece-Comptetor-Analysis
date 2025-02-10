@@ -198,7 +198,7 @@ st.table(product_data.tail(5))
 
 # Perform Sentiment Analysis on Reviews
 if not product_reviews.empty:
-    product_reviews["Reviews"] = product_reviews["Reviews"].apply(
+    product_reviews["Reviews"] = product_reviews["One_Review"].apply(
         lambda x: truncate_text(x, 512)  # Truncate long reviews
     )
     reviews = product_reviews["Reviews"].tolist()
