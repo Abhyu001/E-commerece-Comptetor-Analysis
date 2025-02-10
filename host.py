@@ -193,7 +193,7 @@ product_reviews = reviews_data[reviews_data["Title"] == selected_product]
 # Display Competitor Data for selected product
 st.header(f"Competitor Analysis for {selected_product}")
 st.subheader("Competitor Data")
-st.table(product_data.tail(5))
+st.dataframe(product_data.tail(5))
 
 # Perform Sentiment Analysis on Reviews
 if not product_reviews.empty:
@@ -226,7 +226,7 @@ product_data_with_predictions = forecast_discounts_arima(product_data)
 
 # Display Competitor's current and predicted discounts
 st.subheader("Competitor Current and Predicted Discounts")
-st.table(product_data_with_predictions.tail(10))
+st.dataframe(product_data_with_predictions.tail(10))
 
 # Generate and display strategic recommendations
 recommendations = generate_strategy_recommendation(
