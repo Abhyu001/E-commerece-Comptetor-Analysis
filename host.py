@@ -167,6 +167,7 @@ Provide your recommendations in a structured format:
 
 ####--------------------------------------------------##########
 # Streamlit app title and page configuration
+# Streamlit app title and page configuration
 st.set_page_config(page_title="E-Commerce Competitor Strategy Dashboard", layout="wide")
 
 # Title of the dashboard and sidebar options
@@ -194,7 +195,49 @@ product_reviews = reviews_data[reviews_data["Title"] == selected_product]
 # Display Competitor Data for selected product
 st.header(f"Competitor Analysis for {selected_product}")
 st.subheader("Competitor Data")
-st.table(product_data.tail(5))
+
+# Format and display competitor data
+if not product_data.empty:
+    # Create a copy of the last 5 rows of the product data
+    product_data_display = product_data.tail(5).copy()
+    
+    # Format the Discount column to include a percentage sign
+    product_data_display["Discount"] = product_data_display["Discount"].astype(str) + "%"
+    
+    # Merge with reviews data if available
+    if not product_reviews.empty:
+        # Truncate long reviews for better display
+        product_reviews["Reviews"] = product_reviews["Reviews"].apply(
+            lambda x: truncate_text(x, 512)  # Truncate long reviews
+        )
+        
+        # Merge product data with reviews data on the Title column
+        product_data_display = product_data_display.merge(
+            product_reviews[["Title", "Reviews"]], 
+            on="Title", 
+            how="left"
+        )
+    
+    # Select and display relevant columns
+    st.dataframe(
+        product_data_display[
+            ["Title", "MRP Price", "Price", "Discount", "Rating", "Review Count", "Availability", "Date", "Reviews"]
+        ].reset_index(drop=True),
+         # Set the height of the table
+        column_config={
+            "Title": st.column_config.TextColumn("Product Title", width="large"),  # Make Title column wider
+            "MRP Price": st.column_config.NumberColumn("MRP Price (₹)", format="₹%d"),  # Add currency symbol
+            "Price": st.column_config.NumberColumn("Price (₹)", format="₹%d"),  # Add currency symbol
+            "Discount": st.column_config.TextColumn("Discount (%)"),  # Add percentage symbol
+            "Rating": st.column_config.NumberColumn("Rating (⭐)", format="%.1f"),  # Add star symbol
+            "Review Count": st.column_config.NumberColumn("Review Count"),  # Keep as is
+            "Availability": st.column_config.TextColumn("Availability"),  # Keep as is
+            "Date": st.column_config.DateColumn("Date"),  # Format as date
+            "Reviews": st.column_config.TextColumn("Reviews", width="large")  # Make Reviews column wider
+        }
+    )
+else:
+    st.write("No competitor data available for this product.")
 
 # Perform Sentiment Analysis on Reviews
 if not product_reviews.empty:
@@ -227,7 +270,11 @@ product_data_with_predictions = forecast_discounts_arima(product_data)
 
 # Display Competitor's current and predicted discounts
 st.subheader("Competitor Current and Predicted Discounts")
-st.table(product_data_with_predictions.tail(10))
+if not product_data_with_predictions.empty:
+    product_data_with_predictions["Predicted_Discount"] = product_data_with_predictions["Predicted_Discount"].round(2)
+    st.dataframe(product_data_with_predictions.tail(10).reset_index())
+else:
+    st.write("No discount predictions available.")
 
 # Generate and display strategic recommendations
 recommendations = generate_strategy_recommendation(
